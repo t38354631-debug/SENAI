@@ -15,25 +15,45 @@ const cadastrar = async ( {nome, cpf, email, senha } ) => {
     };
 };
 
-const listar = (req, res ) => {
+
+///////--------///////
+
+const listar = async() => {
+
+    const [result] = await con.query("SELECT * FROM usuarios;");
+
+    return result;
 
 };
 
-const buscar = (req, res) => {
+const buscar = async (id) => {
+    const [result] = await con.query(
+        "SELECT id, nome, email FROM usuarios WHERE id = ?;", 
+        [id]
+    );
 
+    return result;
+};
+    
+const excluir = async (id) => {
+    const [result] = await con.query("DELETE FROM usuarios WHERE id = ?", [id]
+        
+    );
+    
+    return result.affectedRows;
 };
 
-const excluir = (req, res) => {
-
-};
 
 //PUT
-const atualizar = (req, res) => {
-
+const atualizar = async (req, res) => {
+    const id = req.params.id;
+    const { nome, cpf, email, senha } = req.body;
+    const [result] = await con.query("UPDATE usuarios SET nome = ?, cpf = ?, email = ?, senha = ? WHERE id = ?", [nome, cpf, email, senha, id]);
+    return result;
 };
 
 //PATCH
-const alterar = (req, res) => {
+const alterar = async    (req, res) => {
 
 };
 
@@ -42,7 +62,7 @@ module.exports = {
     listar,
     buscar,
     excluir,
-    atualizar,
-    alterar
+    //  atualizar,
+    // alterar
 };
-
+                                                                                                                                                                                                                      

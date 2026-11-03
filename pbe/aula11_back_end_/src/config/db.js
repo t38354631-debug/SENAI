@@ -1,4 +1,4 @@
-const mysql = required('mysql12/promise');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const con = mysql.createPool({
