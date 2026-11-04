@@ -1,0 +1,37 @@
+////Cadastrar
+
+{
+	"nome": "Alice in Chain",
+	"email": "AliceinChain@gmail.com",
+	"senha": "1213senai",
+	"cfp": "234.355.367-45"
+	
+}
+
+///---///
+
+{
+    "nome": "Deftones",
+    "email": "deftones@gmail.com",
+    "senha": "deftones2026",
+    "cpf": "123.456.789-01"
+}
+
+
+///---///
+
+{
+    "nome": "Limp Bizkit",
+    "email": "limpbizkit@gmail.com",
+    "senha": "limp2026",
+    "cpf": "234.567.890-12"
+}
+
+///---///
+
+{
+    "nome": "Slipknot",
+    "email": "slipknot@gmail.com",
+    "senha": "slipknot2026",
+    "cpf": "345.678.901-23"
+}

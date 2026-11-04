@@ -1,0 +1,9 @@
+{
+	"nome": "Alice in Chain",
+	"email": "AliceinChain@gmail.com",
+	"senha": "1213senai",
+	"cfp": "234.355.367-45"
+	
+}
+
+////Cadastrar
