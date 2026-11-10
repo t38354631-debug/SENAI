@@ -1,0 +1,520 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Marítimo</title>
+
+
+<section class="bridge">
+  <h2>⚓ TORRE DE COMANDO</h2>
+  <p>Central de navegação e controle da embarcação</p>
+
+  <div class="bridge-screen">
+    <div>🧭 BÚSSOLA</div>
+    <div id="bridgeHeading">000°</div>
+    <div>VELOCIDADE</div>
+    <div id="bridgeSpeed">0 nós</div>
+  </div>
+
+  <h3>🎮 Controle do leme</h3>
+
+  <div class="helm">
+    <button onclick="turn(-10)">◀</button>
+    <div class="wheel">⚙️</div>
+    <button onclick="turn(10)">▶</button>
+  </div>
+
+  <h3>🚢 Controle das máquinas</h3>
+
+  <div class="engine-controls">
+    <button onclick="startEngine()">LIGAR MOTOR</button>
+    <button onclick="stopEngine()">DESLIGAR</button>
+    <button onclick="accelerate()">ACELERAR</button>
+    <button onclick="brake()">REDUZIR</button>
+    <button onclick="reverse()">MARCHA RÉ</button>
+  </div>
+
+  <h3>Potência do motor</h3>
+  <input type="range" min="0" max="100"
+         value="0" id="bridgeThrottle"
+         oninput="setThrottle(this.value)">
+
+  <p>Potência: <span id="bridgePower">0</span>%</p>
+
+  <h3>🧭 Comandos rápidos</h3>
+  <div class="engine-controls">
+    <button onclick="heading=0;update()">NORTE</button>
+    <button onclick="heading=90;update()">LESTE</button>
+    <button onclick="heading=180;update()">SUL</button>
+    <button onclick="heading=270;update()">OESTE</button>
+  </div>
+</section>
+
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #071b2b;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+
+
+.bridge {
+  margin: 12px;
+  padding: 20px;
+  background: linear-gradient(145deg,#142f45,#061522);
+  border: 2px solid #2996ba;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 0 20px #0088aa33;
+}
+
+.bridge h2 {
+  color: #5cddff;
+}
+
+.bridge-screen {
+  background: #020e18;
+  color: #32eaff;
+  border: 1px solid #1686a7;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 15px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.helm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 15px;
+}
+
+.wheel {
+  font-size: 75px;
+  background: #173b51;
+  border: 3px solid #4ac7ed;
+  border-radius: 50%;
+  width: 110px;
+  height: 110px;
+  display: grid;
+  place-items: center;
+}
+
+.engine-controls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bridge button {
+  background: #087da8;
+  border: 1px solid #43c8ef;
+  min-width: 90px;
+}
+
+.bridge input {
+  width: 90%;
+}
+
+
+header {
+  background: #102f48;
+  padding: 15px;
+  text-align: center;
+  border-bottom: 2px solid #1e789c;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 23px;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 12px;
+  padding: 12px;
+}
+
+.ocean {
+  position: relative;
+  height: 480px;
+  overflow: hidden;
+  border: 2px solid #2585a7;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 30% 40%, #187b9c, transparent 50%),
+    linear-gradient(#08718f, #03415f);
+}
+
+.waves {
+  position: absolute;
+  inset: 0;
+  opacity: .35;
+  background: repeating-linear-gradient(
+    170deg,
+    transparent 0px,
+    transparent 35px,
+    #8ee8ff 37px,
+    transparent 40px
+  );
+  animation: wave 5s linear infinite;
+}
+
+@keyframes wave {
+  from { transform: translateX(0); }
+  to { transform: translateX(70px); }
+}
+
+.ship {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 65px;
+  transform: translate(-50%, -50%);
+  transition: transform .2s;
+  z-index: 2;
+  filter: drop-shadow(0 5px 5px #002333);
+}
+
+.compass {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  background: #061d30cc;
+  border: 1px solid #61c9ed;
+  padding: 12px;
+  border-radius: 50%;
+  width: 75px;
+  height: 75px;
+  text-align: center;
+}
+
+.panel {
+  background: #102f48;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.panel h2 {
+  font-size: 18px;
+  margin-top: 0;
+  color: #64d7ff;
+}
+
+.stat {
+  background: #071f33;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 7px;
+}
+
+.stat span {
+  color: #63d5f5;
+  float: right;
+  font-weight: bold;
+}
+
+.controls {
+  padding: 15px;
+  background: #102f48;
+  margin: 12px;
+  border-radius: 12px;
+}
+
+button {
+  background: #087da8;
+  color: white;
+  border: 0;
+  padding: 13px 18px;
+  margin: 5px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #10a5d8;
+}
+
+button:active {
+  transform: scale(.96);
+}
+
+input {
+  accent-color: #19bce9;
+  width: 100%;
+}
+
+.message {
+  color: #8eeaff;
+  min-height: 25px;
+}
+
+@media(max-width: 700px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  .ocean {
+    height: 350px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>⚓ SIMULADOR DE NAVEGAÇÃO MARÍTIMA</h1>
+  <small>Comando e controle do navio</small>
+</header>
+
+<div class="dashboard">
+
+  <div class="ocean" id="ocean">
+    <div class="waves"></div>
+    <div class="ship" id="ship">🚢</div>
+
+    <div class="compass">
+      🧭
+      <div id="direction">N</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📊 Painel do Capitão</h2>
+
+    <div class="stat">
+      Velocidade <span id="speed">0 nós</span>
+    </div>
+
+    <div class="stat">
+      Direção <span id="heading">000°</span>
+    </div>
+
+    <div class="stat">
+      Combustível <span id="fuel">100%</span>
+    </div>
+
+    <div class="stat">
+      Distância <span id="distance">0.0 NM</span>
+    </div>
+
+    <div class="stat">
+      Motor <span id="engine">Desligado</span>
+    </div>
+
+    <div class="stat">
+      Ondas <span id="weather">Calmo</span>
+    </div>
+
+    <h2>📍 GPS</h2>
+    <div class="stat" id="gps">Lat: 00.0000<br>Lon: 00.0000</div>
+
+    <p class="message" id="message">
+      Bem-vindo, comandante!
+    </p>
+  </div>
+
+</div>
+
+<div class="controls">
+  <h2>🎮 Controles de Navegação</h2>
+
+  <button onclick="startEngine()">🔑 Ligar motor</button>
+  <button onclick="stopEngine()">⛔ Desligar motor</button>
+
+  <br>
+
+  <button onclick="accelerate()">⬆ Acelerar</button>
+  <button onclick="brake()">⬇ Reduzir</button>
+  <button onclick="reverse()">↩ Ré</button>
+
+  <br>
+
+  <button onclick="turn(-10)">↶ Bombordo</button>
+  <button onclick="turn(10)">↷ Boreste</button>
+  <button onclick="turn(180)">🔄 Girar</button>
+
+  <br>
+
+  <button onclick="changeWeather()">🌦 Mudar clima</button>
+  <button onclick="refuel()">⛽ Abastecer</button>
+
+  <h3>Controle de velocidade</h3>
+  <input type="range" min="0" max="30" value="0"
+  id="throttle" oninput="setThrottle(this.value)">
+
+  <p>Potência: <span id="power">0</span>%</p>
+</div>
+
+<script>
+let speed = 0;
+let heading = 0;
+let fuel = 100;
+let distance = 0;
+let engine = false;
+let throttle = 0;
+let weatherIndex = 0;
+let shipX = 50;
+let shipY = 50;
+let lastTime = Date.now();
+
+const weathers = [
+  "Calmo",
+  "Nublado",
+  "Chuva",
+  "Tempestade",
+  "Neblina"
+];
+
+function startEngine() {
+  engine = true;
+  update();
+  message("Motor ligado. Pronto para navegar!");
+}
+
+function stopEngine() {
+  engine = false;
+  throttle = 0;
+  document.getElementById("throttle").value = 0;
+  document.getElementById("power").textContent = 0;
+  update();
+  message("Motor desligado.");
+}
+
+function accelerate() {
+  if (!engine) return message("Ligue o motor primeiro!");
+  throttle = Math.min(100, throttle + 10);
+  update();
+}
+
+function brake() {
+  throttle = Math.max(0, throttle - 10);
+  update();
+}
+
+function reverse() {
+  if (!engine) return message("Ligue o motor primeiro!");
+  speed = Math.max(-5, speed - 2);
+  update();
+}
+
+function turn(degrees) {
+  heading = (heading + degrees + 360) % 360;
+  update();
+}
+
+function setThrottle(value) {
+  if (!engine && value > 0) {
+    document.getElementById("throttle").value = 0;
+    return message("Ligue o motor primeiro!");
+  }
+  throttle = Number(value);
+  update();
+}
+
+function changeWeather() {
+  weatherIndex = (weatherIndex + 1) % weathers.length;
+  document.getElementById("weather").textContent =
+    weathers[weatherIndex];
+
+  message("Clima alterado: " + weathers[weatherIndex]);
+}
+
+function refuel() {
+  fuel = 100;
+  update();
+  message("Tanque abastecido!");
+}
+
+function message(text) {
+  document.getElementById("message").textContent = text;
+}
+function update() {
+  document.getElementById("speed").textContent =
+    speed.toFixed(1) + " nós";
+
+  document.getElementById("heading").textContent =
+    String(Math.round(heading)).padStart(3, "0") + "°";
+
+  document.getElementById("fuel").textContent =
+    fuel.toFixed(1) + "%";
+
+  document.getElementById("distance").textContent =
+    distance.toFixed(2) + " NM";
+
+  document.getElementById("engine").textContent =
+    engine ? "Ligado" : "Desligado";
+
+  document.getElementById("power").textContent = throttle;
+
+  const directions = ["N","NE","E","SE","S","SW","W","NW"];
+
+  document.getElementById("direction").textContent =
+    directions[Math.round(heading / 45) % 8];
+
+  const ship = document.getElementById("ship");
+
+  ship.style.left = shipX + "%";
+  ship.style.top = shipY + "%";
+
+  ship.style.transform =
+    `translate(-50%, -50%) rotate(${heading}deg)`;
+}
+
+setInterval(() => {
+
+  if (engine && fuel > 0) {
+    let target = throttle * 0.25;
+    speed += (target - speed) * 0.08;
+
+    fuel = Math.max(0, fuel - (0.003 + throttle * 0.00008));
+
+    if (fuel === 0) {
+      engine = false;
+      throttle = 0;
+      message("Combustível esgotado!");
+    }
+  } else {
+    speed *= 0.98;
+  }
+
+  // Movimento do barco
+  const movement = speed * 0.012;
+
+  const radians = heading * Math.PI / 180;
+
+  shipX += Math.sin(radians) * movement;
+  shipY -= Math.cos(radians) * movement;
+
+  // Limites do oceano
+  shipX = Math.max(5, Math.min(95, shipX));
+  shipY = Math.max(10, Math.min(90, shipY));
+
+  if (Math.abs(speed) > 0.05) {
+    distance += Math.abs(speed) / 3600;
+  }
+
+  update();
+
+}, 50);
+</script>
+
+</body>
+</html>
